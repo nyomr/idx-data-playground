@@ -23,7 +23,8 @@ def log(msg):
 
 # --- parameter slice ---
 total_parts = 10   # mau bagi jadi 10
-slice_index = 1    # <<< pilih di sini mau jalankan bagian ke berapa (1 s/d 10)
+# <<< pilih di sini mau jalankan bagian ke berapa (1 s/d 10)
+slice_index = 1
 
 # hitung panjang tiap slice
 n = len(data_json)
@@ -43,6 +44,16 @@ def clean_name(nama):
     nama = str(nama).strip()
     nama = re.sub(r'^\s*PT\s+', '', nama, flags=re.IGNORECASE)  # hapus PT
     nama = re.sub(r'(\s+Tbk\.?)+$', '', nama, flags=re.IGNORECASE)  # hapus Tbk
+    suffixes = [
+        "Co Ltd",
+        "Pte Ltd",
+        "Ltd",
+        "Inc",
+        "Corp",
+        "LLC"
+    ]
+    for suf in suffixes:
+        nama = re.sub(rf'\s+{suf}$', '', nama, flags=re.IGNORECASE)
     nama = re.sub(r'\s*\(.*?\)', '', nama)  # hapus (Persero) dsb
     return nama.strip()
 
@@ -252,13 +263,13 @@ for row in tqdm(data_slice, desc=f"Processing companies part {slice_index}", uni
         tqdm.write(f"{kode} - {nama_emiten} (only company address)")
         alamat_records.append({**row, "AlamatPerusahaan": alamat_perusahaan})
         partial_success += 1
-        owner_missing.append({"kodeEmiten": kode, "name": nama_emiten})
+        owner_missing.append({**row})
 
     else:
         tqdm.write(f"{kode} - {nama_emiten} : Not found")
         error_count += 1
-        error_list.append({"kodeEmiten": kode, "name": nama_emiten})
-        owner_missing.append({"kodeEmiten": kode, "name": nama_emiten})
+        error_list.append({**row})
+        owner_missing.append({**row})
 
 # simpan ke CSV
 pd.DataFrame(pemilik_records).to_csv(
