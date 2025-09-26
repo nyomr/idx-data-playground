@@ -24,8 +24,8 @@ def log(msg):
 
 
 # --- parameter slice ---
-total_parts = 20
-slice_index = 2
+total_parts = 200
+slice_index = 1
 
 n = len(data_json)
 chunk_size = math.ceil(n / total_parts)
@@ -158,13 +158,21 @@ def ambil_data_perusahaan(nama, kode, nama_emiten, jenis_korporasi="1", max_retr
             driver.find_element(By.ID, "search").click()
             time.sleep(0.5)
 
-            # ambil tombol detail
-            detail_buttons = driver.find_elements(
-                By.CLASS_NAME, "detail_pemilik_manfaat")
+            try:
+                detail_buttons = WebDriverWait(driver, 6).until(
+                    EC.presence_of_all_elements_located(
+                        (By.CLASS_NAME, "detail_pemilik_manfaat"))
+                )
+            except TimeoutException:
+                detail_buttons = []
 
-            # cek redundan
+            # ==== cek redundan dulu ====
             if cek_redundan(detail_buttons, kode, nama_emiten):
                 return "redundan", ""
+
+            if not detail_buttons:
+                # tidak ada hasil sama sekali
+                return None, ""
 
             # ambil alamat perusahaan
             try:
